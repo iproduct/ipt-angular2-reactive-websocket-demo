@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +32,7 @@ public class ReactorWishesWS {
 	private Broadcaster<String> channelBroadcaster;
 //	private EventBus serverReactor;
 	
-	private final Map<String,String> cache = new HashMap<>();
+//	private final Map<String,String> cache = new HashMap<>();
 	private final Map<String,Integer> wishes = new ConcurrentHashMap<>();
 	Wish[] sampleWishes = {
 		new Wish("RxJava", 15 ),
