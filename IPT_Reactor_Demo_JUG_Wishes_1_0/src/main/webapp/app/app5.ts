@@ -79,7 +79,6 @@ class AppComponent {
 	private wsSubject: IPTRxWebSocketSubject;
 	
 	constructor() {
-		var that = this;
 		var openSubscriber = Subscriber.create(function(e) {
 			console.info('socket open');
 		});

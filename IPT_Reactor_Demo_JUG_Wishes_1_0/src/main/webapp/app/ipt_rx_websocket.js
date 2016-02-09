@@ -45,30 +45,26 @@ var IPTRxWebSocketSubject = (function (_super) {
             throw new TypeError('WebSocket not implemented in your runtime.');
         }
         this.websocket = new WebSocket(url);
-        var that = this;
-        var superNext = _super.prototype.next;
-        var superError = _super.prototype.error;
-        var superComplete = _super.prototype.complete;
         this.websocket.onopen = function (event) {
-            openObserver.next(event);
-            that.websocket.send("aaaa");
+            _this.openObserver.next(event);
+            _this.websocket.send("aaaa");
         };
         this.websocket.onclose = function (event) {
-            closingObserver.next(event);
+            _this.closingObserver.next(event);
         };
         this.websocket.onmessage = function (event) {
             try {
-                superNext.call(that, event.data);
+                _super.prototype.next.call(_this, event.data);
             }
             catch (e) {
                 var errorEvent = new ErrorEvent(e);
                 errorEvent.message = "Invalid event structure.";
                 errorEvent.error = e;
-                superError.call(that, errorEvent);
+                _super.prototype.error.call(_this, errorEvent);
             }
         };
         this.websocket.onerror = function (event) {
-            superError.call(that, event);
+            _super.prototype.error.call(_this, event);
         };
         this.destination = Subscriber_1.Subscriber.create(function (message) {
             _this.websocket.send(message);
@@ -78,7 +74,7 @@ var IPTRxWebSocketSubject = (function (_super) {
             var errorEvent = new ErrorEvent(error);
             errorEvent.message = "Error processing client data stream.";
             errorEvent.error = error;
-            superError.call(that, errorEvent);
+            _super.prototype.error.call(_this, errorEvent);
         }, //CloseEvent.code = Internal Error
         function () {
             console.log("WebSocket closing");

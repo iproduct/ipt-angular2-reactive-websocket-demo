@@ -47,30 +47,26 @@ export class IPTRxWebSocketSubject extends Subject<string> {
 	    this.closingObserver = closingObserver;
 	    if (!WebSocket) { throw new TypeError('WebSocket not implemented in your runtime.'); }
 	    this.websocket = new WebSocket(url);
-	    var that = this;
-	    var superNext = super.next;
-	    var superError = super.error;
-	    var superComplete = super.complete;
 
-	    this.websocket.onopen = function (event) {
-	        openObserver.next(event);
-	        that.websocket.send("aaaa");
+	    this.websocket.onopen = (event) => {
+	        this.openObserver.next(event);
+	        this.websocket.send("aaaa");
 	    };
-	    this.websocket.onclose = function (event) {
-	        closingObserver.next(event);
+	    this.websocket.onclose = (event) => {
+	        this.closingObserver.next(event);
 	    };
-	    this.websocket.onmessage = function (event) {
+	    this.websocket.onmessage = (event) => {
 	    	try {
-	            superNext.call(that, event.data);
+	            super.next.call(this, event.data);
 	        } catch (e) {
 	        	var errorEvent :ErrorEvent = new ErrorEvent(e);
 	        	errorEvent.message = "Invalid event structure.";
 	        	errorEvent.error = e;
-	        	superError.call(that, errorEvent);
+	        	super.error.call(this, errorEvent);
 	        }
 	    };
-	    this.websocket.onerror = function (event) {
-	        superError.call(that, event);
+	    this.websocket.onerror = (event) => {
+	        super.error.call(this, event);
 	    };
 	    
 	    this.destination = Subscriber.create(
@@ -83,7 +79,7 @@ export class IPTRxWebSocketSubject extends Subject<string> {
 	            var errorEvent :ErrorEvent = new ErrorEvent(error);
 	        	errorEvent.message = "Error processing client data stream.";
 	        	errorEvent.error = error;
-	        	superError.call(that, errorEvent);
+	        	super.error.call(this, errorEvent);
 	        }, //CloseEvent.code = Internal Error
 	        () => {
 	        	console.log("WebSocket closing"); 
