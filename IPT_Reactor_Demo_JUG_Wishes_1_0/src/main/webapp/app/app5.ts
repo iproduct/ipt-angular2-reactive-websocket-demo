@@ -27,7 +27,7 @@ declare function createWebSocketSubject(url: string, protocols: string,
 	openSubscriber: Subscriber<any>, closingSubscriber: Subscriber<any>): Subject<any>;
 declare function updateCloud(tags: Wish[]): void;
 
-class Wish {
+interface Wish {
 	title: string;
 	clicks: number;
 }
@@ -77,24 +77,6 @@ class AppComponent {
 	public selectedWish: Wish;
 	public newWish: Wish = EMPTY_WISH;
 	private wsSubject: IPTRxWebSocketSubject;
-
-	socketSubject: Subject<any>;
-	socketDataObsvervabe: Observable<string>;
-	subject: Subject<string> = new Subject<string>();
-	subscription: Subscription<string> = this.subject.subscribe(event =>
-		{ 
-		var data: string = event;
-			// console.log(`data: ${data}`);
-			var tokens = data.split(/,/);
-			this.wishes = [];
-			for(var tokenId in tokens) {
-				var parts = tokens[tokenId].split(/:/);
-				// console.log(tokenId,"->",parts[0], ":", parts[1]);
-				this.wishes[tokenId] = { title: parts[0], clicks: parseInt(parts[1]) };
-			}
-			updateCloud(this.wishes);
-		}
-	);
 	
 	constructor() {
 		var that = this;
@@ -108,21 +90,27 @@ class AppComponent {
 		});
 
 		//Create WebSocket Subject
-		this.socketSubject = new IPTRxWebSocketSubject('ws://127.0.0.1/ws', null,
+		this.wsSubject = new IPTRxWebSocketSubject('ws://127.0.0.1/ws', null,
 			openSubscriber, closingSubscriber);
 
-		this.socketSubject.subscribe(
-			function(event) {
-				console.log(event);
-				that.subject.next(event);
+		this.wsSubject.subscribe(
+			event => {
+				var data: string = event;
+				// console.log(`data: ${data}`);
+				var tokens = data.split(/,/);
+				this.wishes = [];
+				for (var tokenId in tokens) {
+					var parts = tokens[tokenId].split(/:/);
+					// console.log(tokenId,"->",parts[0], ":", parts[1]);
+					this.wishes[tokenId] = { title: parts[0], clicks: parseInt(parts[1]) };
+				}
+				updateCloud(this.wishes);
 			},
-			function(err) {
+			err => {
 				console.log("Error:", event); 
-				that.subject.error(err);
 			},
-			function() {
+			() => {
 				console.log("Complete:", event);
-				that.subject.complete();
 			});
 
 	}
@@ -133,7 +121,7 @@ class AppComponent {
 	}
 
 	submitToServer(wish: Wish) {
-		this.socketSubject.next("+1:" + wish.title);
+		this.wsSubject.next("+1:" + wish.title);
 	}
 
 	getSelectedClass(wish: Wish) {

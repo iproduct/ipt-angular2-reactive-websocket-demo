@@ -28,7 +28,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var angular2_1 = require('angular2/angular2');
 // import {Observable, Subscriber, Subscription, Scheduler, Subject} from "../node_modules/angular2/node_modules/@reactivex/rxjs/dist/cjs/Rx";
 var Subscriber_1 = require('rxjs/Subscriber');
-var Subject_1 = require('rxjs/Subject');
 var ipt_rx_websocket_1 = require('./ipt_rx_websocket');
 var Wish = (function () {
     function Wish() {
@@ -41,8 +40,17 @@ var AppComponent = (function () {
         this.title = 'JUG Wish Demo';
         this.wishes = [{ "title": "Initializing ...", "clicks": 0 }];
         this.newWish = EMPTY_WISH;
-        this.subject = new Subject_1.Subject();
-        this.subscription = this.subject.subscribe(function (event) {
+        var that = this;
+        var openSubscriber = Subscriber_1.Subscriber.create(function (e) {
+            console.info('socket open');
+        });
+        // an observer for when the socket is about to close
+        var closingSubscriber = Subscriber_1.Subscriber.create(function () {
+            console.log('socket is about to close');
+        });
+        //Create WebSocket Subject
+        this.wsSubject = new ipt_rx_websocket_1.IPTRxWebSocketSubject('ws://127.0.0.1/ws', null, openSubscriber, closingSubscriber);
+        this.wsSubject.subscribe(function (event) {
             var data = event;
             // console.log(`data: ${data}`);
             var tokens = data.split(/,/);
@@ -53,26 +61,10 @@ var AppComponent = (function () {
                 _this.wishes[tokenId] = { title: parts[0], clicks: parseInt(parts[1]) };
             }
             updateCloud(_this.wishes);
-        });
-        var that = this;
-        var openSubscriber = Subscriber_1.Subscriber.create(function (e) {
-            console.info('socket open');
-        });
-        // an observer for when the socket is about to close
-        var closingSubscriber = Subscriber_1.Subscriber.create(function () {
-            console.log('socket is about to close');
-        });
-        //Create WebSocket Subject
-        this.socketSubject = new ipt_rx_websocket_1.IPTRxWebSocketSubject('ws://127.0.0.1/ws', null, openSubscriber, closingSubscriber);
-        this.socketSubject.subscribe(function (event) {
-            console.log(event);
-            that.subject.next(event);
         }, function (err) {
             console.log("Error:", event);
-            that.subject.error(err);
         }, function () {
             console.log("Complete:", event);
-            that.subject.complete();
         });
     }
     AppComponent.prototype.onSelect = function (wish) {
@@ -80,7 +72,7 @@ var AppComponent = (function () {
         this.submitToServer(wish);
     };
     AppComponent.prototype.submitToServer = function (wish) {
-        this.socketSubject.next("+1:" + wish.title);
+        this.wsSubject.next("+1:" + wish.title);
     };
     AppComponent.prototype.getSelectedClass = function (wish) {
         return { 'selected': wish === this.selectedWish };
